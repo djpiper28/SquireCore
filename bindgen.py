@@ -131,11 +131,11 @@ bitflags = true
 [parse]
 parse_deps = true
 clean = true
-include = ["serde", "mtgjson", "cycle_map", "uuid", "dashmap", "std"]
-extra_bindings = ["serde", "mtgjson", "cycle_map", "uuid", "dashmap", "std"]
+include = ["mtgjson", "uuid"]
+extra_bindings = ["mtgjson", "uuid"]
 
 [parse.expand]
-crates = ["serde", "mtgjson", "cycle_map", "uuid", "dashmap", "std"]
+crates = ["mtgjson", "uuid"]
 all_features = false
 default_features = true
 """

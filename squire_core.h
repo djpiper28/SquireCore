@@ -24,6 +24,1125 @@ namespace squire_core {
  */
 constexpr static const size_t sc_Hyphenated_LENGTH = 36;
 
+enum class sc_PlayerStatus
+{
+  Registered,
+  Dropped,
+};
+
+enum class sc_RoundStatus
+{
+  Open,
+  Uncertified,
+  Certified,
+  Dead,
+};
+
+enum class sc_TournamentPreset
+{
+  Swiss,
+  Fluid,
+};
+
+enum class sc_TournamentStatus
+{
+  Planned,
+  Started,
+  Frozen,
+  Ended,
+  Cancelled,
+};
+
+/**
+ * A struct to help resolve blockages
+ */
+struct sc_Blockage;
+
+struct sc_FluidPairings;
+
+struct sc_FullOp;
+
+struct sc_OpData;
+
+struct sc_OpId;
+
+/**
+ * An ordered list of all operations applied to a tournament
+ */
+struct sc_OpLog;
+
+/**
+ * An ordered list of some of the operations applied to a tournament
+ */
+struct sc_OpSlice;
+
+/**
+ * A struct to help resolve syncing op logs
+ */
+struct sc_OpSync;
+
+struct sc_PairingSetting;
+
+struct sc_PairingSystem;
+
+struct sc_Pairings;
+
+struct sc_Player;
+
+struct sc_PlayerIdentifier;
+
+struct sc_PlayerRegistry;
+
+/**
+ * A struct used to communicate a rollback
+ */
+struct sc_Rollback;
+
+struct sc_Round;
+
+struct sc_RoundRegistry;
+
+struct sc_ScoringSetting;
+
+struct sc_ScoringSystem;
+
+template<typename S = void>
+struct sc_Standings;
+
+/**
+ * An iterator over all the states of a tournament
+ */
+struct sc_StateIter;
+
+struct sc_SwissPairings;
+
+struct sc_SyncError;
+
+/**
+ * An enum to help track the progress of the syncing of two op logs
+ */
+struct sc_SyncStatus;
+
+/**
+ * A struct that marks a completed syncing of op logs
+ */
+struct sc_Synced;
+
+/**
+ * This enum captures all ways in which a tournament can mutate.
+ */
+struct sc_TournOp;
+
+struct sc_Tournament;
+
+struct sc_TournamentError;
+
+struct sc_TournamentIdentifier;
+
+/**
+ * A state manager for the tournament struct
+ *
+ * The manager holds the current tournament and can recreate any meaningful prior state.
+ *
+ * This is the primary synchronization primative between tournaments.
+ */
+struct sc_TournamentManager;
+
+struct sc_TournamentSetting;
+
+/**
+ * A 128-bit (16 byte) buffer containing the ID.
+ */
+using sc_Bytes = uint8_t[16];
+
+/**
+ * A Universally Unique Identifier (UUID).
+ */
+using sc_Uuid = sc_Bytes;
+
+struct sc_PlayerId
+{
+  sc_Uuid _0;
+};
+
+struct sc_RoundResult
+{
+  enum class Tag
+  {
+    Wins,
+    Draw,
+  };
+
+  struct sc_Wins_Body
+  {
+    sc_PlayerId _0;
+    uint8_t _1;
+  };
+
+  struct sc_Draw_Body
+  {
+
+  };
+
+  Tag tag;
+  union
+  {
+    sc_Wins_Body wins;
+    sc_Draw_Body draw;
+  };
+
+  static sc_RoundResult Wins(const sc_PlayerId &_0,
+                             const uint8_t &_1)
+  {
+    sc_RoundResult result;
+    ::new (&result.wins._0) (sc_PlayerId)(_0);
+    ::new (&result.wins._1) (uint8_t)(_1);
+    result.tag = Tag::Wins;
+    return result;
+  }
+
+  bool IsWins() const
+  {
+    return tag == Tag::Wins;
+  }
+
+  const sc_Wins_Body& AsWins() const
+  {
+    assert(IsWins());
+    return wins;
+  }
+
+  sc_Wins_Body& AsWins()
+  {
+    assert(IsWins());
+    return wins;
+  }
+
+  static sc_RoundResult Draw()
+  {
+    sc_RoundResult result;
+    result.tag = Tag::Draw;
+    return result;
+  }
+
+  bool IsDraw() const
+  {
+    return tag == Tag::Draw;
+  }
+
+  private:
+  sc_RoundResult()
+  {
+
+  }
+  public:
+
+
+  ~sc_RoundResult()
+  {
+    switch (tag)
+    {
+      case Tag::Wins: wins.~sc_Wins_Body(); break;
+      case Tag::Draw: draw.~sc_Draw_Body(); break;
+
+    }
+  }
+
+  sc_RoundResult(const sc_RoundResult& other)
+   : tag(other.tag)
+  {
+    switch (tag)
+    {
+      case Tag::Wins: ::new (&wins) (sc_Wins_Body)(other.wins); break;
+      case Tag::Draw: ::new (&draw) (sc_Draw_Body)(other.draw); break;
+
+    }
+  }
+  sc_RoundResult& operator=(const sc_RoundResult& other)
+  {
+    if (this != &other)
+    {
+      this->~sc_RoundResult();
+      new (this) sc_RoundResult(other);
+    }
+    return *this;
+  }
+};
+
+struct sc_RoundId
+{
+  sc_Uuid _0;
+};
+
+struct sc_RoundIdentifier
+{
+  enum class Tag
+  {
+    Id,
+    Number,
+  };
+
+  struct sc_Id_Body
+  {
+    sc_RoundId _0;
+  };
+
+  struct sc_Number_Body
+  {
+    uint64_t _0;
+  };
+
+  Tag tag;
+  union
+  {
+    sc_Id_Body id;
+    sc_Number_Body number;
+  };
+
+  static sc_RoundIdentifier Id(const sc_RoundId &_0)
+  {
+    sc_RoundIdentifier result;
+    ::new (&result.id._0) (sc_RoundId)(_0);
+    result.tag = Tag::Id;
+    return result;
+  }
+
+  bool IsId() const
+  {
+    return tag == Tag::Id;
+  }
+
+  const sc_RoundId& AsId() const
+  {
+    assert(IsId());
+    return id._0;
+  }
+
+  sc_RoundId& AsId()
+  {
+    assert(IsId());
+    return id._0;
+  }
+
+  static sc_RoundIdentifier Number(const uint64_t &_0)
+  {
+    sc_RoundIdentifier result;
+    ::new (&result.number._0) (uint64_t)(_0);
+    result.tag = Tag::Number;
+    return result;
+  }
+
+  bool IsNumber() const
+  {
+    return tag == Tag::Number;
+  }
+
+  const uint64_t& AsNumber() const
+  {
+    assert(IsNumber());
+    return number._0;
+  }
+
+  uint64_t& AsNumber()
+  {
+    assert(IsNumber());
+    return number._0;
+  }
+
+  private:
+  sc_RoundIdentifier()
+  {
+
+  }
+  public:
+
+
+  ~sc_RoundIdentifier()
+  {
+    switch (tag)
+    {
+      case Tag::Id: id.~sc_Id_Body(); break;
+      case Tag::Number: number.~sc_Number_Body(); break;
+
+    }
+  }
+
+  sc_RoundIdentifier(const sc_RoundIdentifier& other)
+   : tag(other.tag)
+  {
+    switch (tag)
+    {
+      case Tag::Id: ::new (&id) (sc_Id_Body)(other.id); break;
+      case Tag::Number: ::new (&number) (sc_Number_Body)(other.number); break;
+
+    }
+  }
+  sc_RoundIdentifier& operator=(const sc_RoundIdentifier& other)
+  {
+    if (this != &other)
+    {
+      this->~sc_RoundIdentifier();
+      new (this) sc_RoundIdentifier(other);
+    }
+    return *this;
+  }
+};
+
+struct sc_SwissPairingsSetting
+{
+  enum class Tag
+  {
+    MatchSize,
+    DoCheckIns,
+  };
+
+  struct sc_MatchSize_Body
+  {
+    uint8_t _0;
+  };
+
+  struct sc_DoCheckIns_Body
+  {
+    bool _0;
+  };
+
+  Tag tag;
+  union
+  {
+    sc_MatchSize_Body match_size;
+    sc_DoCheckIns_Body do_check_ins;
+  };
+
+  static sc_SwissPairingsSetting MatchSize(const uint8_t &_0)
+  {
+    sc_SwissPairingsSetting result;
+    ::new (&result.match_size._0) (uint8_t)(_0);
+    result.tag = Tag::MatchSize;
+    return result;
+  }
+
+  bool IsMatchSize() const
+  {
+    return tag == Tag::MatchSize;
+  }
+
+  const uint8_t& AsMatchSize() const
+  {
+    assert(IsMatchSize());
+    return match_size._0;
+  }
+
+  uint8_t& AsMatchSize()
+  {
+    assert(IsMatchSize());
+    return match_size._0;
+  }
+
+  static sc_SwissPairingsSetting DoCheckIns(const bool &_0)
+  {
+    sc_SwissPairingsSetting result;
+    ::new (&result.do_check_ins._0) (bool)(_0);
+    result.tag = Tag::DoCheckIns;
+    return result;
+  }
+
+  bool IsDoCheckIns() const
+  {
+    return tag == Tag::DoCheckIns;
+  }
+
+  const bool& AsDoCheckIns() const
+  {
+    assert(IsDoCheckIns());
+    return do_check_ins._0;
+  }
+
+  bool& AsDoCheckIns()
+  {
+    assert(IsDoCheckIns());
+    return do_check_ins._0;
+  }
+
+  private:
+  sc_SwissPairingsSetting()
+  {
+
+  }
+  public:
+
+
+  ~sc_SwissPairingsSetting()
+  {
+    switch (tag)
+    {
+      case Tag::MatchSize: match_size.~sc_MatchSize_Body(); break;
+      case Tag::DoCheckIns: do_check_ins.~sc_DoCheckIns_Body(); break;
+
+    }
+  }
+
+  sc_SwissPairingsSetting(const sc_SwissPairingsSetting& other)
+   : tag(other.tag)
+  {
+    switch (tag)
+    {
+      case Tag::MatchSize: ::new (&match_size) (sc_MatchSize_Body)(other.match_size); break;
+      case Tag::DoCheckIns: ::new (&do_check_ins) (sc_DoCheckIns_Body)(other.do_check_ins); break;
+
+    }
+  }
+  sc_SwissPairingsSetting& operator=(const sc_SwissPairingsSetting& other)
+  {
+    if (this != &other)
+    {
+      this->~sc_SwissPairingsSetting();
+      new (this) sc_SwissPairingsSetting(other);
+    }
+    return *this;
+  }
+};
+
+struct sc_FluidPairingsSetting
+{
+  enum class Tag
+  {
+    MatchSize,
+  };
+
+  struct sc_MatchSize_Body
+  {
+    uint8_t _0;
+  };
+
+  Tag tag;
+  union
+  {
+    sc_MatchSize_Body match_size;
+  };
+
+  static sc_FluidPairingsSetting MatchSize(const uint8_t &_0)
+  {
+    sc_FluidPairingsSetting result;
+    ::new (&result.match_size._0) (uint8_t)(_0);
+    result.tag = Tag::MatchSize;
+    return result;
+  }
+
+  bool IsMatchSize() const
+  {
+    return tag == Tag::MatchSize;
+  }
+
+  const uint8_t& AsMatchSize() const
+  {
+    assert(IsMatchSize());
+    return match_size._0;
+  }
+
+  uint8_t& AsMatchSize()
+  {
+    assert(IsMatchSize());
+    return match_size._0;
+  }
+
+  private:
+  sc_FluidPairingsSetting()
+  {
+
+  }
+  public:
+
+
+  ~sc_FluidPairingsSetting()
+  {
+    switch (tag)
+    {
+      case Tag::MatchSize: match_size.~sc_MatchSize_Body(); break;
+
+    }
+  }
+
+  sc_FluidPairingsSetting(const sc_FluidPairingsSetting& other)
+   : tag(other.tag)
+  {
+    switch (tag)
+    {
+      case Tag::MatchSize: ::new (&match_size) (sc_MatchSize_Body)(other.match_size); break;
+
+    }
+  }
+  sc_FluidPairingsSetting& operator=(const sc_FluidPairingsSetting& other)
+  {
+    if (this != &other)
+    {
+      this->~sc_FluidPairingsSetting();
+      new (this) sc_FluidPairingsSetting(other);
+    }
+    return *this;
+  }
+};
+
+struct sc_StandardScoringSetting
+{
+  enum class Tag
+  {
+    MatchWinPoints,
+    MatchDrawPoints,
+    MatchLossPoints,
+    GameWinPoints,
+    GameDrawPoints,
+    GameLossPoints,
+    ByePoints,
+    IncludeByes,
+    IncludeMatchPoints,
+    IncludeGamePoints,
+    IncludeMwp,
+    IncludeGwp,
+    IncludeOppMwp,
+    IncludeOppGwp,
+  };
+
+  struct sc_MatchWinPoints_Body
+  {
+    double _0;
+  };
+
+  struct sc_MatchDrawPoints_Body
+  {
+    double _0;
+  };
+
+  struct sc_MatchLossPoints_Body
+  {
+    double _0;
+  };
+
+  struct sc_GameWinPoints_Body
+  {
+    double _0;
+  };
+
+  struct sc_GameDrawPoints_Body
+  {
+    double _0;
+  };
+
+  struct sc_GameLossPoints_Body
+  {
+    double _0;
+  };
+
+  struct sc_ByePoints_Body
+  {
+    double _0;
+  };
+
+  struct sc_IncludeByes_Body
+  {
+    bool _0;
+  };
+
+  struct sc_IncludeMatchPoints_Body
+  {
+    bool _0;
+  };
+
+  struct sc_IncludeGamePoints_Body
+  {
+    bool _0;
+  };
+
+  struct sc_IncludeMwp_Body
+  {
+    bool _0;
+  };
+
+  struct sc_IncludeGwp_Body
+  {
+    bool _0;
+  };
+
+  struct sc_IncludeOppMwp_Body
+  {
+    bool _0;
+  };
+
+  struct sc_IncludeOppGwp_Body
+  {
+    bool _0;
+  };
+
+  Tag tag;
+  union
+  {
+    sc_MatchWinPoints_Body match_win_points;
+    sc_MatchDrawPoints_Body match_draw_points;
+    sc_MatchLossPoints_Body match_loss_points;
+    sc_GameWinPoints_Body game_win_points;
+    sc_GameDrawPoints_Body game_draw_points;
+    sc_GameLossPoints_Body game_loss_points;
+    sc_ByePoints_Body bye_points;
+    sc_IncludeByes_Body include_byes;
+    sc_IncludeMatchPoints_Body include_match_points;
+    sc_IncludeGamePoints_Body include_game_points;
+    sc_IncludeMwp_Body include_mwp;
+    sc_IncludeGwp_Body include_gwp;
+    sc_IncludeOppMwp_Body include_opp_mwp;
+    sc_IncludeOppGwp_Body include_opp_gwp;
+  };
+
+  static sc_StandardScoringSetting MatchWinPoints(const double &_0)
+  {
+    sc_StandardScoringSetting result;
+    ::new (&result.match_win_points._0) (double)(_0);
+    result.tag = Tag::MatchWinPoints;
+    return result;
+  }
+
+  bool IsMatchWinPoints() const
+  {
+    return tag == Tag::MatchWinPoints;
+  }
+
+  const double& AsMatchWinPoints() const
+  {
+    assert(IsMatchWinPoints());
+    return match_win_points._0;
+  }
+
+  double& AsMatchWinPoints()
+  {
+    assert(IsMatchWinPoints());
+    return match_win_points._0;
+  }
+
+  static sc_StandardScoringSetting MatchDrawPoints(const double &_0)
+  {
+    sc_StandardScoringSetting result;
+    ::new (&result.match_draw_points._0) (double)(_0);
+    result.tag = Tag::MatchDrawPoints;
+    return result;
+  }
+
+  bool IsMatchDrawPoints() const
+  {
+    return tag == Tag::MatchDrawPoints;
+  }
+
+  const double& AsMatchDrawPoints() const
+  {
+    assert(IsMatchDrawPoints());
+    return match_draw_points._0;
+  }
+
+  double& AsMatchDrawPoints()
+  {
+    assert(IsMatchDrawPoints());
+    return match_draw_points._0;
+  }
+
+  static sc_StandardScoringSetting MatchLossPoints(const double &_0)
+  {
+    sc_StandardScoringSetting result;
+    ::new (&result.match_loss_points._0) (double)(_0);
+    result.tag = Tag::MatchLossPoints;
+    return result;
+  }
+
+  bool IsMatchLossPoints() const
+  {
+    return tag == Tag::MatchLossPoints;
+  }
+
+  const double& AsMatchLossPoints() const
+  {
+    assert(IsMatchLossPoints());
+    return match_loss_points._0;
+  }
+
+  double& AsMatchLossPoints()
+  {
+    assert(IsMatchLossPoints());
+    return match_loss_points._0;
+  }
+
+  static sc_StandardScoringSetting GameWinPoints(const double &_0)
+  {
+    sc_StandardScoringSetting result;
+    ::new (&result.game_win_points._0) (double)(_0);
+    result.tag = Tag::GameWinPoints;
+    return result;
+  }
+
+  bool IsGameWinPoints() const
+  {
+    return tag == Tag::GameWinPoints;
+  }
+
+  const double& AsGameWinPoints() const
+  {
+    assert(IsGameWinPoints());
+    return game_win_points._0;
+  }
+
+  double& AsGameWinPoints()
+  {
+    assert(IsGameWinPoints());
+    return game_win_points._0;
+  }
+
+  static sc_StandardScoringSetting GameDrawPoints(const double &_0)
+  {
+    sc_StandardScoringSetting result;
+    ::new (&result.game_draw_points._0) (double)(_0);
+    result.tag = Tag::GameDrawPoints;
+    return result;
+  }
+
+  bool IsGameDrawPoints() const
+  {
+    return tag == Tag::GameDrawPoints;
+  }
+
+  const double& AsGameDrawPoints() const
+  {
+    assert(IsGameDrawPoints());
+    return game_draw_points._0;
+  }
+
+  double& AsGameDrawPoints()
+  {
+    assert(IsGameDrawPoints());
+    return game_draw_points._0;
+  }
+
+  static sc_StandardScoringSetting GameLossPoints(const double &_0)
+  {
+    sc_StandardScoringSetting result;
+    ::new (&result.game_loss_points._0) (double)(_0);
+    result.tag = Tag::GameLossPoints;
+    return result;
+  }
+
+  bool IsGameLossPoints() const
+  {
+    return tag == Tag::GameLossPoints;
+  }
+
+  const double& AsGameLossPoints() const
+  {
+    assert(IsGameLossPoints());
+    return game_loss_points._0;
+  }
+
+  double& AsGameLossPoints()
+  {
+    assert(IsGameLossPoints());
+    return game_loss_points._0;
+  }
+
+  static sc_StandardScoringSetting ByePoints(const double &_0)
+  {
+    sc_StandardScoringSetting result;
+    ::new (&result.bye_points._0) (double)(_0);
+    result.tag = Tag::ByePoints;
+    return result;
+  }
+
+  bool IsByePoints() const
+  {
+    return tag == Tag::ByePoints;
+  }
+
+  const double& AsByePoints() const
+  {
+    assert(IsByePoints());
+    return bye_points._0;
+  }
+
+  double& AsByePoints()
+  {
+    assert(IsByePoints());
+    return bye_points._0;
+  }
+
+  static sc_StandardScoringSetting IncludeByes(const bool &_0)
+  {
+    sc_StandardScoringSetting result;
+    ::new (&result.include_byes._0) (bool)(_0);
+    result.tag = Tag::IncludeByes;
+    return result;
+  }
+
+  bool IsIncludeByes() const
+  {
+    return tag == Tag::IncludeByes;
+  }
+
+  const bool& AsIncludeByes() const
+  {
+    assert(IsIncludeByes());
+    return include_byes._0;
+  }
+
+  bool& AsIncludeByes()
+  {
+    assert(IsIncludeByes());
+    return include_byes._0;
+  }
+
+  static sc_StandardScoringSetting IncludeMatchPoints(const bool &_0)
+  {
+    sc_StandardScoringSetting result;
+    ::new (&result.include_match_points._0) (bool)(_0);
+    result.tag = Tag::IncludeMatchPoints;
+    return result;
+  }
+
+  bool IsIncludeMatchPoints() const
+  {
+    return tag == Tag::IncludeMatchPoints;
+  }
+
+  const bool& AsIncludeMatchPoints() const
+  {
+    assert(IsIncludeMatchPoints());
+    return include_match_points._0;
+  }
+
+  bool& AsIncludeMatchPoints()
+  {
+    assert(IsIncludeMatchPoints());
+    return include_match_points._0;
+  }
+
+  static sc_StandardScoringSetting IncludeGamePoints(const bool &_0)
+  {
+    sc_StandardScoringSetting result;
+    ::new (&result.include_game_points._0) (bool)(_0);
+    result.tag = Tag::IncludeGamePoints;
+    return result;
+  }
+
+  bool IsIncludeGamePoints() const
+  {
+    return tag == Tag::IncludeGamePoints;
+  }
+
+  const bool& AsIncludeGamePoints() const
+  {
+    assert(IsIncludeGamePoints());
+    return include_game_points._0;
+  }
+
+  bool& AsIncludeGamePoints()
+  {
+    assert(IsIncludeGamePoints());
+    return include_game_points._0;
+  }
+
+  static sc_StandardScoringSetting IncludeMwp(const bool &_0)
+  {
+    sc_StandardScoringSetting result;
+    ::new (&result.include_mwp._0) (bool)(_0);
+    result.tag = Tag::IncludeMwp;
+    return result;
+  }
+
+  bool IsIncludeMwp() const
+  {
+    return tag == Tag::IncludeMwp;
+  }
+
+  const bool& AsIncludeMwp() const
+  {
+    assert(IsIncludeMwp());
+    return include_mwp._0;
+  }
+
+  bool& AsIncludeMwp()
+  {
+    assert(IsIncludeMwp());
+    return include_mwp._0;
+  }
+
+  static sc_StandardScoringSetting IncludeGwp(const bool &_0)
+  {
+    sc_StandardScoringSetting result;
+    ::new (&result.include_gwp._0) (bool)(_0);
+    result.tag = Tag::IncludeGwp;
+    return result;
+  }
+
+  bool IsIncludeGwp() const
+  {
+    return tag == Tag::IncludeGwp;
+  }
+
+  const bool& AsIncludeGwp() const
+  {
+    assert(IsIncludeGwp());
+    return include_gwp._0;
+  }
+
+  bool& AsIncludeGwp()
+  {
+    assert(IsIncludeGwp());
+    return include_gwp._0;
+  }
+
+  static sc_StandardScoringSetting IncludeOppMwp(const bool &_0)
+  {
+    sc_StandardScoringSetting result;
+    ::new (&result.include_opp_mwp._0) (bool)(_0);
+    result.tag = Tag::IncludeOppMwp;
+    return result;
+  }
+
+  bool IsIncludeOppMwp() const
+  {
+    return tag == Tag::IncludeOppMwp;
+  }
+
+  const bool& AsIncludeOppMwp() const
+  {
+    assert(IsIncludeOppMwp());
+    return include_opp_mwp._0;
+  }
+
+  bool& AsIncludeOppMwp()
+  {
+    assert(IsIncludeOppMwp());
+    return include_opp_mwp._0;
+  }
+
+  static sc_StandardScoringSetting IncludeOppGwp(const bool &_0)
+  {
+    sc_StandardScoringSetting result;
+    ::new (&result.include_opp_gwp._0) (bool)(_0);
+    result.tag = Tag::IncludeOppGwp;
+    return result;
+  }
+
+  bool IsIncludeOppGwp() const
+  {
+    return tag == Tag::IncludeOppGwp;
+  }
+
+  const bool& AsIncludeOppGwp() const
+  {
+    assert(IsIncludeOppGwp());
+    return include_opp_gwp._0;
+  }
+
+  bool& AsIncludeOppGwp()
+  {
+    assert(IsIncludeOppGwp());
+    return include_opp_gwp._0;
+  }
+
+  private:
+  sc_StandardScoringSetting()
+  {
+
+  }
+  public:
+
+
+  ~sc_StandardScoringSetting()
+  {
+    switch (tag)
+    {
+      case Tag::MatchWinPoints: match_win_points.~sc_MatchWinPoints_Body(); break;
+      case Tag::MatchDrawPoints: match_draw_points.~sc_MatchDrawPoints_Body(); break;
+      case Tag::MatchLossPoints: match_loss_points.~sc_MatchLossPoints_Body(); break;
+      case Tag::GameWinPoints: game_win_points.~sc_GameWinPoints_Body(); break;
+      case Tag::GameDrawPoints: game_draw_points.~sc_GameDrawPoints_Body(); break;
+      case Tag::GameLossPoints: game_loss_points.~sc_GameLossPoints_Body(); break;
+      case Tag::ByePoints: bye_points.~sc_ByePoints_Body(); break;
+      case Tag::IncludeByes: include_byes.~sc_IncludeByes_Body(); break;
+      case Tag::IncludeMatchPoints: include_match_points.~sc_IncludeMatchPoints_Body(); break;
+      case Tag::IncludeGamePoints: include_game_points.~sc_IncludeGamePoints_Body(); break;
+      case Tag::IncludeMwp: include_mwp.~sc_IncludeMwp_Body(); break;
+      case Tag::IncludeGwp: include_gwp.~sc_IncludeGwp_Body(); break;
+      case Tag::IncludeOppMwp: include_opp_mwp.~sc_IncludeOppMwp_Body(); break;
+      case Tag::IncludeOppGwp: include_opp_gwp.~sc_IncludeOppGwp_Body(); break;
+
+    }
+  }
+
+  sc_StandardScoringSetting(const sc_StandardScoringSetting& other)
+   : tag(other.tag)
+  {
+    switch (tag)
+    {
+      case Tag::MatchWinPoints: ::new (&match_win_points) (sc_MatchWinPoints_Body)(other.match_win_points); break;
+      case Tag::MatchDrawPoints: ::new (&match_draw_points) (sc_MatchDrawPoints_Body)(other.match_draw_points); break;
+      case Tag::MatchLossPoints: ::new (&match_loss_points) (sc_MatchLossPoints_Body)(other.match_loss_points); break;
+      case Tag::GameWinPoints: ::new (&game_win_points) (sc_GameWinPoints_Body)(other.game_win_points); break;
+      case Tag::GameDrawPoints: ::new (&game_draw_points) (sc_GameDrawPoints_Body)(other.game_draw_points); break;
+      case Tag::GameLossPoints: ::new (&game_loss_points) (sc_GameLossPoints_Body)(other.game_loss_points); break;
+      case Tag::ByePoints: ::new (&bye_points) (sc_ByePoints_Body)(other.bye_points); break;
+      case Tag::IncludeByes: ::new (&include_byes) (sc_IncludeByes_Body)(other.include_byes); break;
+      case Tag::IncludeMatchPoints: ::new (&include_match_points) (sc_IncludeMatchPoints_Body)(other.include_match_points); break;
+      case Tag::IncludeGamePoints: ::new (&include_game_points) (sc_IncludeGamePoints_Body)(other.include_game_points); break;
+      case Tag::IncludeMwp: ::new (&include_mwp) (sc_IncludeMwp_Body)(other.include_mwp); break;
+      case Tag::IncludeGwp: ::new (&include_gwp) (sc_IncludeGwp_Body)(other.include_gwp); break;
+      case Tag::IncludeOppMwp: ::new (&include_opp_mwp) (sc_IncludeOppMwp_Body)(other.include_opp_mwp); break;
+      case Tag::IncludeOppGwp: ::new (&include_opp_gwp) (sc_IncludeOppGwp_Body)(other.include_opp_gwp); break;
+
+    }
+  }
+  sc_StandardScoringSetting& operator=(const sc_StandardScoringSetting& other)
+  {
+    if (this != &other)
+    {
+      this->~sc_StandardScoringSetting();
+      new (this) sc_StandardScoringSetting(other);
+    }
+    return *this;
+  }
+};
+
+struct sc_StandardScore
+{
+  double match_points;
+  double game_points;
+  double mwp;
+  double gwp;
+  double opp_mwp;
+  double opp_gwp;
+  bool include_match_points;
+  bool include_game_points;
+  bool include_mwp;
+  bool include_gwp;
+  bool include_opp_mwp;
+  bool include_opp_gwp;
+};
+
+struct sc_StandardScoring
+{
+  double match_win_points;
+  double match_draw_points;
+  double match_loss_points;
+  double game_win_points;
+  double game_draw_points;
+  double game_loss_points;
+  double bye_points;
+  bool include_byes;
+  bool include_match_points;
+  bool include_game_points;
+  bool include_mwp;
+  bool include_gwp;
+  bool include_opp_mwp;
+  bool include_opp_gwp;
+};
+
+struct sc_TournamentId
+{
+  sc_Uuid _0;
+};
+
 } // namespace squire_core
 
 /* AUTO GENERATED SQUIRE_CORE BINDINGS DO NOT MODIFY BY HAND */
