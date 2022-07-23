@@ -44,14 +44,14 @@ const BACKUP_EXT: &str = ".bak";
 /// the Rust lib with these methods
 impl TournamentId {
     #[no_mangle]
-    pub extern fn close(self: Self) {
+    pub extern fn close_tourn(self: Self) {
         FFI_TOURNAMENT_REGISTRY.get().unwrap().remove(&self);
     }
 
     /// Saves a tournament to a name
     /// Returns true if successful, false if not.
     #[no_mangle]
-    pub extern fn save(self: Self, __file: &CStr) -> bool {
+    pub extern fn save_tourn(self: Self, __file: &CStr) -> bool {
         let file: &str = __file.to_str().unwrap();
         let tournament: Tournament;
         match FFI_TOURNAMENT_REGISTRY.get().unwrap().get(&self) {
@@ -126,7 +126,7 @@ pub extern fn load_tournament_from_file(__file: &CStr) -> TournamentId {
 
 /// Creates a tournament from the settings provided
 #[no_mangle]
-fn new_tournament_from_settings(
+pub extern fn new_tournament_from_settings(
     __file: &CStr,
     __name: &CStr,
     __format: &CStr,
@@ -163,6 +163,6 @@ fn new_tournament_from_settings(
         .unwrap()
         .insert(tid, tournament.clone());
 
-    tournament.id.save(__file);
+    tournament.id.save_tourn(__file);
     return tournament.id;
 }
