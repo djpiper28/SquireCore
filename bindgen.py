@@ -71,7 +71,7 @@ documentation_style = "doxy"
 style = "both"
 sort_by = "None"
 usize_is_size_t = true
-after_includes = "#define sc_CStr char"
+after_includes = "#define SQUIRE_LIB"
 \n"""
 out += """[export]
 prefix = "sc_"

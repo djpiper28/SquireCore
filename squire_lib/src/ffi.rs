@@ -22,6 +22,7 @@ use dashmap::DashMap;
 use once_cell::sync::OnceCell;
 use serde_json;
 use std::ffi::CStr;
+use std::os::raw::c_char;
 use std::fs::{read_to_string, remove_file, rename, write};
 use std::option::Option;
 use std::time::Duration;
@@ -40,6 +41,12 @@ static ref NULL_UUID_BYTES:
 static FFI_TOURNAMENT_REGISTRY: OnceCell<DashMap<TournamentId, Tournament>> = OnceCell::new();
 const BACKUP_EXT: &str = ".bak";
 
+#[no_mangle]
+pub extern fn init_squire_ffi() {
+    let map: DashMap<TournamentId, Tournament> = DashMap::new();
+    FFI_TOURNAMENT_REGISTRY.set(map);
+}
+
 /// TournamentIds can be used to get data safely from
 /// the Rust lib with these methods
 impl TournamentId {
@@ -51,8 +58,8 @@ impl TournamentId {
     /// Saves a tournament to a name
     /// Returns true if successful, false if not.
     #[no_mangle]
-    pub extern fn save_tourn(self: Self, __file: &CStr) -> bool {
-        let file: &str = __file.to_str().unwrap();
+    pub extern fn save_tourn(self: Self, __file: *const c_char) -> bool {
+        let file: &str = unsafe { CStr::from_ptr(__file).to_str().unwrap() };
         let tournament: Tournament;
         match FFI_TOURNAMENT_REGISTRY.get().unwrap().get(&self) {
             Some(v) => tournament = v.value().clone(),
@@ -88,8 +95,8 @@ impl TournamentId {
 /// The tournament is then registered (stored on the heap)
 /// CStr path to the tournament (alloc and, free on Cxx side)
 #[no_mangle]
-pub extern fn load_tournament_from_file(__file: &CStr) -> TournamentId {
-    let file: &str = __file.to_str().unwrap();
+pub extern fn load_tournament_from_file(__file: * const c_char) -> TournamentId {
+    let file: &str = unsafe { CStr::from_ptr(__file).to_str().unwrap() };
     let json: String;
     match read_to_string(file) {
         Ok(v) => json = v.to_string(),
@@ -127,9 +134,9 @@ pub extern fn load_tournament_from_file(__file: &CStr) -> TournamentId {
 /// Creates a tournament from the settings provided
 #[no_mangle]
 pub extern fn new_tournament_from_settings(
-    __file: &CStr,
-    __name: &CStr,
-    __format: &CStr,
+    __file: *const c_char,
+    __name: *const c_char,
+    __format: *const c_char,
     preset: TournamentPreset,
     use_table_number: bool,
     game_size: u8,
@@ -141,9 +148,9 @@ pub extern fn new_tournament_from_settings(
 ) -> TournamentId {
     let tournament: Tournament = Tournament {
         id: TournamentId(Uuid::new_v4()),
-        name: __name.to_str().unwrap().to_string(),
+        name: unsafe { CStr::from_ptr(__name).to_str().unwrap().to_string() },
         use_table_number: use_table_number,
-        format: __format.to_str().unwrap().to_string(),
+        format: unsafe { CStr::from_ptr(__format).to_str().unwrap().to_string() },
         game_size: game_size,
         min_deck_count: min_deck_count,
         max_deck_count: max_deck_count,
