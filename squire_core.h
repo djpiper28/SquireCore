@@ -13,7 +13,7 @@
 #include <ostream>
 #include <new>
 #include <cassert>
-#define SQUIRE_CORE
+#define sc_CStr char
 
 namespace squire_core {
 
@@ -159,6 +159,11 @@ using sc_Bytes = uint8_t[16];
  * A Universally Unique Identifier (UUID).
  */
 using sc_Uuid = sc_Bytes;
+
+struct sc_TournamentId
+{
+  sc_Uuid _0;
+};
 
 struct sc_PlayerId
 {
@@ -1138,10 +1143,24 @@ struct sc_StandardScoring
   bool include_opp_gwp;
 };
 
-struct sc_TournamentId
-{
-  sc_Uuid _0;
-};
+extern "C" {
+
+void close(sc_TournamentId self);
+
+/**
+ * Loads a tournament from a file via serde
+ * The tournament is then registered (stored on the heap)
+ * CStr path to the tournament (alloc and, free on Cxx side)
+ */
+sc_TournamentId load_tournament_from_file(const sc_CStr *__file);
+
+/**
+ * Saves a tournament to a name
+ * Returns true if successful, false if not.
+ */
+bool save(sc_TournamentId self, const sc_CStr *__file);
+
+} // extern "C"
 
 } // namespace squire_core
 

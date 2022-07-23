@@ -44,14 +44,14 @@ const BACKUP_EXT: &str = ".bak";
 /// the Rust lib with these methods
 impl TournamentId {
     #[no_mangle]
-    fn close(self: Self) {
+    pub extern fn close(self: Self) {
         FFI_TOURNAMENT_REGISTRY.get().unwrap().remove(&self);
     }
 
     /// Saves a tournament to a name
     /// Returns true if successful, false if not.
     #[no_mangle]
-    fn save(self: Self, __file: &CStr) -> bool {
+    pub extern fn save(self: Self, __file: &CStr) -> bool {
         let file: &str = __file.to_str().unwrap();
         let tournament: Tournament;
         match FFI_TOURNAMENT_REGISTRY.get().unwrap().get(&self) {
@@ -88,7 +88,7 @@ impl TournamentId {
 /// The tournament is then registered (stored on the heap)
 /// CStr path to the tournament (alloc and, free on Cxx side)
 #[no_mangle]
-fn load_tournament_from_file(__file: &CStr) -> TournamentId {
+pub extern fn load_tournament_from_file(__file: &CStr) -> TournamentId {
     let file: &str = __file.to_str().unwrap();
     let json: String;
     match read_to_string(file) {
