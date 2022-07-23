@@ -170,6 +170,8 @@ pub extern fn new_tournament_from_settings(
         .unwrap()
         .insert(tid, tournament.clone());
 
-    tournament.id.save_tourn(__file);
+    if !tournament.id.save_tourn(__file) {
+        return TournamentId(Uuid::from_bytes(*NULL_UUID_BYTES));
+    }
     return tournament.id;
 }
