@@ -19,7 +19,9 @@ message(
     "Building rust with options: ${TARGET_DIR}, ${RUST_FLAGS}, linking .${EXT}")
 add_custom_command(
   OUTPUT RUST_PART_CXX
-  COMMAND TARGET_DIR=${CMAKE_CURRENT_BINARY_DIR} RUSTFLAGS="${RUST_FLAGS}"
+  COMMAND ${CMAKE_COMMAND} -E env
+          TARGET_DIR=${CMAKE_CURRENT_BINARY_DIR} 
+          RUSTFLAGS="${RUST_FLAGS}"
           bash "ffi_build.sh"
   COMMAND cp "${CMAKE_CURRENT_SOURCE_DIR}/target/debug/libsquire_lib.${EXT}"
           "${RUST_PART_CXX}"
