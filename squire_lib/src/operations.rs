@@ -483,7 +483,9 @@ impl OpLog {
         };
         let slice = match self.get_slice(id) {
             Some(s) => s,
-            None => { return SyncStatus::SyncError(other); }
+            None => {
+                return SyncStatus::SyncError(other);
+            }
         };
         let merge = slice.merge(other.ops);
         match merge {
@@ -491,9 +493,9 @@ impl OpLog {
                 let index = self.ops.iter().position(|o| o.id == id).unwrap();
                 self.ops.truncate(index);
                 self.ops.extend(new_slice.ops.iter().cloned());
-                SyncStatus::Completed(Synced {known: new_slice})
+                SyncStatus::Completed(Synced { known: new_slice })
             }
-            Err(block) => SyncStatus::InProgress(block)
+            Err(block) => SyncStatus::InProgress(block),
         }
     }
 }
@@ -595,7 +597,7 @@ impl FullOp {
             active: true,
         }
     }
-    
+
     /// Determines if the given operation affects this operation
     pub fn blocks(&self, other: &Self) -> bool {
         self.op.blocks(&other.op)

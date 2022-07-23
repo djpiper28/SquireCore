@@ -57,9 +57,9 @@ pub enum TournamentStatus {
     Cancelled,
 }
 
-#[derive(Serialize, Deserialize, Debug, Clone, Hash, PartialEq, Eq)]
+#[derive(Serialize, Deserialize, Debug, Clone, Hash, PartialEq, Eq, Copy)]
 #[repr(C)]
-pub struct TournamentId(Uuid);
+pub struct TournamentId(pub Uuid);
 
 #[derive(Serialize, Deserialize, Debug, Clone, Hash, PartialEq, Eq)]
 #[repr(C)]
@@ -222,7 +222,7 @@ impl Tournament {
         }
         Ok(OpData::Nothing)
     }
-    
+
     pub(crate) fn import_player(&mut self, plyr: Player) -> OpResult {
         if !(self.is_planned() || self.is_active()) {
             return Err(TournamentError::IncorrectStatus(self.status));
@@ -230,7 +230,7 @@ impl Tournament {
         self.player_reg.import_player(plyr)?;
         Ok(OpData::Nothing)
     }
-    
+
     pub(crate) fn import_round(&mut self, rnd: Round) -> OpResult {
         if !(self.is_planned() || self.is_active()) {
             return Err(TournamentError::IncorrectStatus(self.status));
