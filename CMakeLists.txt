@@ -15,9 +15,11 @@ if(WIN32)
   add_custom_command(
     OUTPUT ${RUST_PART_H_FILE}
     COMMAND ${CMAKE_COMMAND} -E env RUSTFLAGS="${RUST_FLAGS}" "ffi_build.bat"
-    COMMAND copy /Y "${CMAKE_CURRENT_SOURCE_DIR}/target/debug/squire_lib.${EXT}"
-            "${RUST_PART_CXX_FILE}"
-    COMMAND copy /Y "${CMAKE_CURRENT_SOURCE_DIR}/squire_core.h"
+    COMMAND
+      ${CMAKE_COMMAND} copy
+      "${CMAKE_CURRENT_SOURCE_DIR}/target/debug/squire_lib.${EXT}"
+      "${RUST_PART_CXX_FILE}"
+    COMMAND ${CMAKE_COMMAND} copy "${CMAKE_CURRENT_SOURCE_DIR}/squire_core.h"
             "${RUST_PART_H_FILE}"
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 else()
@@ -25,9 +27,11 @@ else()
     OUTPUT ${RUST_PART_H_FILE}
     COMMAND ${CMAKE_COMMAND} -E env RUSTFLAGS="${RUST_FLAGS}" bash
             "ffi_build.sh"
-    COMMAND cp -f "${CMAKE_CURRENT_SOURCE_DIR}/target/debug/libsquire_lib.${EXT}"
-            "${RUST_PART_CXX_FILE}"
-    COMMAND cp -f "${CMAKE_CURRENT_SOURCE_DIR}/squire_core.h"
+    COMMAND
+      cp ${CMAKE_COMMAND}
+      "${CMAKE_CURRENT_SOURCE_DIR}/target/debug/libsquire_lib.${EXT}"}
+      "${RUST_PART_CXX_FILE}"
+    COMMAND ${CMAKE_COMMAND} cp "${CMAKE_CURRENT_SOURCE_DIR}/squire_core.h"
             "${RUST_PART_H_FILE}"
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
