@@ -131,11 +131,11 @@ bitflags = true
 [parse]
 parse_deps = true
 clean = true
-include = ["mtgjson", "uuid"]
-extra_bindings = ["mtgjson", "uuid"]
+include = ["uuid"]
+extra_bindings = ["uuid"]
 
 [parse.expand]
-crates = ["mtgjson", "uuid"]
+crates = ["uuid"]
 all_features = false
 default_features = true
 """
