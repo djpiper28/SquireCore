@@ -40,7 +40,7 @@ add_custom_target(RUST_PART_CXX DEPENDS ${RUST_PART_H_FILE})
 add_library(squire_core)
 set_target_properties(squire_core PROPERTIES IMPORTED_LOCATION
                                              ${RUST_PART_CXX_FILE})
-target_link_libraries(squire_core pthread dl ${RUST_PART_CXX_FILE})
+target_link_libraries(squire_core ${RUST_PART_CXX_FILE})
 add_dependencies(squire_core RUST_PART_CXX)
 
 add_test(
