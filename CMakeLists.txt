@@ -43,7 +43,7 @@ if(UNIX)
     set(LIBS "dl" "pthread")
 endif()
 
-add_library(squire_core)
+add_library(squire_core STATIC)
 set_target_properties(squire_core PROPERTIES IMPORTED_LOCATION
                                              ${RUST_PART_CXX_FILE})
 target_link_libraries(squire_core INTERFACE ${RUST_PART_CXX_FILE} ${LIBS})
