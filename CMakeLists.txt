@@ -13,7 +13,7 @@ message(
     "Building rust with options: ${RUST_FLAGS}, linking ${RUST_PART_CXX_FILE}")
 if(WIN32)
   add_custom_command(
-    OUTPUT ${RUST_PART_H_FILE}
+    OUTPUT ${RUST_PART_H_FILE} ${RUST_PART_CXX_FILE}
     COMMAND ${CMAKE_COMMAND} -E env RUSTFLAGS="${RUST_FLAGS}" "ffi_build.bat"
     COMMAND
       ${CMAKE_COMMAND} -E copy
@@ -24,7 +24,7 @@ if(WIN32)
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 else()
   add_custom_command(
-    OUTPUT ${RUST_PART_H_FILE}
+    OUTPUT ${RUST_PART_H_FILE} ${RUST_PART_CXX_FILE}
     COMMAND ${CMAKE_COMMAND} -E env RUSTFLAGS="${RUST_FLAGS}" bash
             "ffi_build.sh"
     COMMAND
@@ -35,13 +35,14 @@ else()
             "${RUST_PART_H_FILE}"
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 endif()
-add_custom_target(RUST_PART_CXX DEPENDS ${RUST_PART_H_FILE})
+add_custom_target(RUST_PART_H DEPENDS ${RUST_PART_H_FILE})
+add_custom_target(RUST_PART_CXX DEPENDS ${RUST_PART_CXX_FILE})
 
 add_library(squire_core)
 set_target_properties(squire_core PROPERTIES IMPORTED_LOCATION
                                              ${RUST_PART_CXX_FILE})
 target_link_libraries(squire_core ${RUST_PART_CXX_FILE})
-add_dependencies(squire_core RUST_PART_CXX)
+add_dependencies(squire_core RUST_PART_CXX RUST_PART_H)
 
 add_test(
   NAME squire_core_test
