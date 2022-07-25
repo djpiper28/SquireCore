@@ -13,7 +13,7 @@ message(
     "Building rust with options: ${RUST_FLAGS}, linking ${RUST_PART_CXX_FILE}")
 if(WIN32)
   add_custom_command(
-    OUTPUT ${RUST_PART_H_FILE} ${RUST_PART_CXX_FILE}
+    OUTPUT ${RUST_PART_H_FILE}
     COMMAND ${CMAKE_COMMAND} -E env RUSTFLAGS="${RUST_FLAGS}" "ffi_build.bat"
     COMMAND
       ${CMAKE_COMMAND} -E copy
@@ -24,7 +24,7 @@ if(WIN32)
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 else()
   add_custom_command(
-    OUTPUT ${RUST_PART_H_FILE} ${RUST_PART_CXX_FILE}
+    OUTPUT ${RUST_PART_H_FILE}
     COMMAND ${CMAKE_COMMAND} -E env RUSTFLAGS="${RUST_FLAGS}" bash
             "ffi_build.sh"
     COMMAND
