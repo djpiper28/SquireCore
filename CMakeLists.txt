@@ -37,7 +37,7 @@ else()
 endif()
 add_custom_target(RUST_PART_H DEPENDS ${RUST_PART_H_FILE})
 
-add_library(squire_core STATIC IMPORTED)
+add_library(squire_core)
 set_target_properties(squire_core PROPERTIES IMPORTED_LOCATION
                                              ${RUST_PART_CXX_FILE})
 target_link_libraries(squire_core INTERFACE ${RUST_PART_CXX_FILE})
