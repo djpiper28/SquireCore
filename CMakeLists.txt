@@ -1,5 +1,3 @@
-set(TARGET_DIR "debug")
-
 if(WIN32)
   set(EXT "lib")
 elseif("${CMAKE_SYSTEM_NAME}" STREQUAL "Macos")
@@ -8,20 +6,35 @@ else()
   set(EXT "a")
 endif()
 
-set(RUST_PART_CXX "${CMAKE_CURRENT_BINARY_DIR}/squire_core.${EXT}")
+set(RUST_PART_CXX_FILE "${CMAKE_CURRENT_BINARY_DIR}/squire_core.${EXT}")
 message(
   STATUS
-    "Building rust with options: ${TARGET_DIR}, ${RUST_FLAGS}, linking .${EXT}")
-add_custom_command(
-  OUTPUT RUST_PART_CXX
-  COMMAND ${CMAKE_COMMAND} -E env TARGET_DIR=${CMAKE_CURRENT_BINARY_DIR}
-          RUSTFLAGS="${RUST_FLAGS}" bash "ffi_build.sh"
-  COMMAND cp "${CMAKE_CURRENT_SOURCE_DIR}/target/debug/libsquire_lib.${EXT}"
-          "${RUST_PART_CXX}"
-  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+    "Building rust with options: ${RUST_FLAGS}, linking ${RUST_PART_CXX_FILE}")
+if(WIN32)
+  add_custom_command(
+    OUTPUT RUST_PART_CXX
+    COMMAND ${CMAKE_COMMAND} -E env RUSTFLAGS="${RUST_FLAGS}" "ffi_build.bat"
+    COMMAND copy "${CMAKE_CURRENT_SOURCE_DIR}/target/debug/squire_lib.${EXT}"
+            "${RUST_PART_CXX_FILE}"
+    COMMAND copy "${CMAKE_CURRENT_SOURCE_DIR}/squire_core.h"
+            "${CMAKE_CURRENT_BINARY_DIR}/squire_core.h"
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+else()
+  add_custom_command(
+    OUTPUT RUST_PART_CXX
+    COMMAND ${CMAKE_COMMAND} -E env RUSTFLAGS="${RUST_FLAGS}" bash
+            "ffi_build.sh"
+    COMMAND cp "${CMAKE_CURRENT_SOURCE_DIR}/target/debug/libsquire_lib.${EXT}"
+            "${RUST_PART_CXX_FILE}"
+    COMMAND cp "${CMAKE_CURRENT_SOURCE_DIR}/squire_core.h"
+            "${CMAKE_CURRENT_BINARY_DIR}/squire_core.h"
+    WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
+endif()
 
-add_library(squire_core STATIC RUST_PART_CXX)
-target_link_libraries(squire_core pthread dl ${RUST_PART_CXX})
+add_library(squire_core)
+set_target_properties(squire_core PROPERTIES IMPORTED_LOCATION
+                                             ${RUST_PART_CXX_FILE})
+target_link_libraries(squire_core pthread dl ${RUST_PART_CXX_FILE})
 
 add_test(
   NAME squire_core_test
