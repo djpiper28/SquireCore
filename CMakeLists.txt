@@ -1,5 +1,5 @@
 if(WIN32)
-  set(EXT "rlib")
+  set(EXT "lib")
 elseif("${CMAKE_SYSTEM_NAME}" STREQUAL "Macos")
   set(EXT "dylib")
 else()
@@ -17,7 +17,7 @@ if(WIN32)
     COMMAND ${CMAKE_COMMAND} -E env RUSTFLAGS="${RUST_FLAGS}" "ffi_build.bat"
     COMMAND
       ${CMAKE_COMMAND} -E copy
-      "${CMAKE_CURRENT_SOURCE_DIR}/target/debug/libsquire_lib.${EXT}"
+      "${CMAKE_CURRENT_SOURCE_DIR}/target/debug/squire_lib.${EXT}"
       "${RUST_PART_CXX_FILE}"
     COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/squire_core.h"
             "${RUST_PART_H_FILE}"
