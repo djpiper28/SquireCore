@@ -21,6 +21,7 @@ if(WIN32)
       "${RUST_PART_CXX_FILE}"
     COMMAND ${CMAKE_COMMAND} -E copy "${CMAKE_CURRENT_SOURCE_DIR}/squire_core.h"
             "${RUST_PART_H_FILE}"
+    COMMAND ${CMAKE_COMMAND} -E copy "${RUST_PART_CXX_FILE}" "${CMAKE_BINARY_DIR}/squire_core.${EXT}"
     WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR})
 else()
   add_custom_command(
