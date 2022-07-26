@@ -45,7 +45,7 @@ elseif(WIN32)
     set(LIBS "wsock32" "ws2_32" "bcrypt")
 endif()
 
-add_library(squire_core STATIC)
+add_library(squire_core INTERFACE)
 set_target_properties(squire_core PROPERTIES IMPORTED_LOCATION
                                              ${RUST_PART_CXX_FILE})
 target_link_libraries(squire_core INTERFACE ${RUST_PART_CXX_FILE} ${LIBS})
