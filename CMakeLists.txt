@@ -1,3 +1,41 @@
+cmake_minimum_required(VERSION 3.9)
+
+project(
+  SquireCore
+  VERSION 0.1
+  LANGUAGES CXX)
+
+set(SQ_REPO_URL "https://github.com/MonarchDevelopment/SquireCore")
+
+message(STATUS "Squire Core information:")
+message(STATUS "Building ${CMAKE_PROJECT_NAME}")
+message(STATUS "SQ Git repo: ${SQ_REPO_URL}")
+message(STATUS "SQ Build type: ${CMAKE_BUILD_TYPE}")
+message(STATUS "SQ Version: ${CMAKE_PROJECT_VERSION}")
+message(STATUS "SQ Build OS: ${CMAKE_SYSTEM_NAME}")
+
+# Copy into your CMakeFile after importing this sub directory
+# Get the branch name
+execute_process(
+  COMMAND git rev-parse --abbrev-ref HEAD
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  OUTPUT_VARIABLE SQ_GIT_BRANCH
+  OUTPUT_STRIP_TRAILING_WHITESPACE)
+
+# Get the latest abbreviated commit hash of the working branch
+execute_process(
+  COMMAND git log -1 --format=%h
+  WORKING_DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR}
+  OUTPUT_VARIABLE SQ_GIT_COMMIT_HASH
+  OUTPUT_STRIP_TRAILING_WHITESPACE)
+message(STATUS "SQ Commit info: ${SQ_GIT_COMMIT_HASH}@${SQ_GIT_BRANCH}")
+
+# Version info
+add_definitions("-DSQ_GIT_COMMIT_HASH=\"${SQ_GIT_COMMIT_HASH}\"")
+add_definitions("-DSQ_GIT_BRANCH=\"${SQ_GIT_BRANCH}\"")
+add_definitions(
+  "-DSQ_VERSION=\"${CMAKE_PROJECT_VERSION} (${SQ_GIT_COMMIT_HASH}@${SQ_GIT_BRANCH})\"")
+
 if(WIN32)
   set(EXT "lib")
 elseif("${CMAKE_SYSTEM_NAME}" STREQUAL "Macos")
