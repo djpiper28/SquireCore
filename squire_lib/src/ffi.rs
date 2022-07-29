@@ -73,7 +73,7 @@ impl TournamentId {
     /// Returns NULL if an error happens
     /// This is heap allocated, please free it
     #[no_mangle]
-    pub extern "C" fn name(self: Self) -> *const c_char {
+    pub extern "C" fn tid_name(self: Self) -> *const c_char {
         let tourn: Tournament;
         match FFI_TOURNAMENT_REGISTRY.get().unwrap().get(&self) {
             Some(t) => tourn = t.value().clone(),
@@ -88,7 +88,7 @@ impl TournamentId {
     /// Returns NULL if an error happens
     /// This is heap allocated, please free it
     #[no_mangle]
-    pub extern "C" fn format(self: Self) -> *const c_char {
+    pub extern "C" fn tid_format(self: Self) -> *const c_char {
         let tourn: Tournament;
         match FFI_TOURNAMENT_REGISTRY.get().unwrap().get(&self) {
             Some(t) => tourn = t.value().clone(),
@@ -102,7 +102,7 @@ impl TournamentId {
     /// Returns whether table numbers are being used for this tournament
     /// false, is the error value (kinda sketchy)
     #[no_mangle]
-    pub extern "C" fn use_table_number(self: Self) -> bool {
+    pub extern "C" fn tid_use_table_number(self: Self) -> bool {
         match FFI_TOURNAMENT_REGISTRY.get().unwrap().get(&self) {
             Some(t) => return t.value().use_table_number,
             None => {
@@ -115,7 +115,7 @@ impl TournamentId {
     /// Returns the game size
     /// -1 is the error value
     #[no_mangle]
-    pub extern "C" fn game_size(self: Self) -> i32 {
+    pub extern "C" fn tid_game_size(self: Self) -> i32 {
         match FFI_TOURNAMENT_REGISTRY.get().unwrap().get(&self) {
             Some(t) => return t.value().game_size as i32,
             None => {
@@ -128,7 +128,7 @@ impl TournamentId {
     /// Returns the min deck count
     /// -1 is the error value
     #[no_mangle]
-    pub extern "C" fn min_deck_count(self: Self) -> i32 {
+    pub extern "C" fn tid_min_deck_count(self: Self) -> i32 {
         match FFI_TOURNAMENT_REGISTRY.get().unwrap().get(&self) {
             Some(t) => return t.value().min_deck_count as i32,
             None => {
@@ -141,7 +141,7 @@ impl TournamentId {
     /// Returns the max deck count
     /// -1 is the error value
     #[no_mangle]
-    pub extern "C" fn max_deck_count(self: Self) -> i32 {
+    pub extern "C" fn tid_max_deck_count(self: Self) -> i32 {
         match FFI_TOURNAMENT_REGISTRY.get().unwrap().get(&self) {
             Some(t) => return t.value().max_deck_count as i32,
             None => {
@@ -155,7 +155,7 @@ impl TournamentId {
     /// This is of type TournamentPreset, but an int to let me return error values
     /// -1 is error value
     #[no_mangle]
-    pub extern "C" fn pairing_type(self: Self) -> i32 {
+    pub extern "C" fn tid_pairing_type(self: Self) -> i32 {
         let tourn: Tournament;
         match FFI_TOURNAMENT_REGISTRY.get().unwrap().get(&self) {
             Some(t) => tourn = t.value().clone(),
@@ -178,7 +178,7 @@ impl TournamentId {
     /// Whether reg is open
     /// False on error
     #[no_mangle]
-    pub extern "C" fn reg_open(self: Self) -> bool {
+    pub extern "C" fn tid_reg_open(self: Self) -> bool {
         match FFI_TOURNAMENT_REGISTRY.get().unwrap().get(&self) {
             Some(t) => return t.reg_open,
             None => {
@@ -191,7 +191,7 @@ impl TournamentId {
     /// Whether checkins are needed
     /// False on error
     #[no_mangle]
-    pub extern "C" fn require_check_in(self: Self) -> bool {
+    pub extern "C" fn tid_require_check_in(self: Self) -> bool {
         match FFI_TOURNAMENT_REGISTRY.get().unwrap().get(&self) {
             Some(t) => return t.require_check_in,
             None => {
@@ -204,7 +204,7 @@ impl TournamentId {
     /// Whether deck reg is needed
     /// False on error
     #[no_mangle]
-    pub extern "C" fn require_deck_reg(self: Self) -> bool {
+    pub extern "C" fn tid_require_deck_reg(self: Self) -> bool {
         match FFI_TOURNAMENT_REGISTRY.get().unwrap().get(&self) {
             Some(t) => return t.require_deck_reg,
             None => {
@@ -217,7 +217,7 @@ impl TournamentId {
     /// Returns the status
     /// Returns cancelled on error
     #[no_mangle]
-    pub extern "C" fn status(self: Self) -> TournamentStatus {
+    pub extern "C" fn tid_status(self: Self) -> TournamentStatus {
         match FFI_TOURNAMENT_REGISTRY.get().unwrap().get(&self) {
             Some(t) => return t.status,
             None => {
