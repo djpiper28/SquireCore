@@ -31,6 +31,8 @@ use std::ptr::null;
 use std::time::Duration;
 use std::vec::Vec;
 use uuid::Uuid;
+use std::alloc::{Allocator, System, Layout};
+use std::ptr;
 
 lazy_static! {
     /// NULL UUIDs are returned on errors
@@ -52,18 +54,20 @@ pub extern "C" fn init_squire_ffi() {
 }
 
 /// Helper function for cloning strings
-fn clone_string_to_c_string(s: String) -> *const c_char {
+unsafe fn clone_string_to_c_string(s: String) -> *mut c_char {
     let len: usize = s.len() + 1;
-    let mut v: Vec<u8> = Vec::with_capacity(len);
     let s_str = s.as_bytes();
-    v[s.len()] = 0;
-
+    
+    let ptr = System.allocate(Layout::from_size_align(len, 1).unwrap()).unwrap().as_mut_ptr() as *mut c_char;
+    let mut slice = &mut *(ptr::slice_from_raw_parts(ptr, len) as *mut [c_char]);
     let mut i: usize = 0;
     while i < s.len() {
-        v[i] = s_str[i];
+        slice[i] = s_str[i] as i8;
         i += 1;
     }
-    return v.as_ptr() as *const c_char;
+    slice[i] = 0;
+
+    return ptr;
 }
 
 /// TournamentIds can be used to get data safely from
@@ -81,7 +85,7 @@ impl TournamentId {
                 return std::ptr::null();
             }
         }
-        return clone_string_to_c_string(tourn.name);
+        return unsafe { clone_string_to_c_string(tourn.name) };
     }
 
     /// Returns the format of a tournament
@@ -96,7 +100,7 @@ impl TournamentId {
                 return std::ptr::null();
             }
         }
-        return clone_string_to_c_string(tourn.format);
+        return unsafe { clone_string_to_c_string(tourn.format) };
     }
 
     /// Returns whether table numbers are being used for this tournament
