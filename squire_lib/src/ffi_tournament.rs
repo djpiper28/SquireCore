@@ -8,7 +8,7 @@ use crate::tournament::scoring_system_factory;
 use crate::tournament::PairingSystem::{Fluid, Swiss};
 use crate::tournament::{Tournament, TournamentPreset, TournamentStatus};
 use crate::{
-    identifiers::{PlayerId, PlayerIdentifier, TournamentId},
+    identifiers::{PlayerId, PlayerIdentifier, RoundId, TournamentId},
     player_registry::PlayerRegistry,
 };
 use serde_json;
@@ -52,6 +52,40 @@ impl TournamentId {
             let mut i: usize = 0;
             while i < players.len() {
                 slice[i] = players[i];
+                i += 1;
+            }
+            slice[i] = Uuid::default().into();
+            return ptr;
+        }
+    }
+
+    /// Returns a raw pointer to rounds
+    /// This is an array that is terminated by the NULL UUID
+    /// This is heap allocted, please free it
+    /// Returns NULL on error
+    #[no_mangle]
+    pub extern "C" fn tid_rounds(self: Self) -> *const RoundId {
+        unsafe {
+            let tourn: Tournament;
+            match FFI_TOURNAMENT_REGISTRY.get().unwrap().get(&self) {
+                Some(t) => tourn = t.value().clone(),
+                None => {
+                    return std::ptr::null();
+                }
+            }
+
+            let rounds: Vec<RoundId> = tourn.round_reg.get_round_ids();
+
+            let len: usize = (rounds.len() + 1) * std::mem::size_of::<RoundId>();
+
+            let ptr = System
+                .allocate(Layout::from_size_align(len, 1).unwrap())
+                .unwrap()
+                .as_mut_ptr() as *mut RoundId;
+            let slice = &mut *(ptr::slice_from_raw_parts(ptr, len) as *mut [RoundId]);
+            let mut i: usize = 0;
+            while i < rounds.len() {
+                slice[i] = rounds[i];
                 i += 1;
             }
             slice[i] = Uuid::default().into();

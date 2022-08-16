@@ -105,7 +105,8 @@ mod tests {
         let in_queue = plyrs
             .players
             .keys()
-            .find(|p| pairing.paired[0].iter().find(|id| id == p).is_none()).unwrap();
+            .find(|p| pairing.paired[0].iter().find(|id| id == p).is_none())
+            .unwrap();
         for id in plyrs.players.keys() {
             sys.ready_player(*id);
         }
@@ -135,7 +136,8 @@ mod tests {
         let in_queue = plyrs
             .players
             .keys()
-            .find(|p| pairing.paired[0].iter().find(|id| id == p).is_none()).unwrap();
+            .find(|p| pairing.paired[0].iter().find(|id| id == p).is_none())
+            .unwrap();
         sys.ready_player(pairing.paired[0][0]);
         sys.ready_player(pairing.paired[0][1]);
         assert!(!sys.ready_to_pair());
@@ -166,7 +168,7 @@ mod tests {
         assert_eq!(pairings.paired.len(), 0);
         assert_eq!(pairings.rejected.len(), 0);
         assert!(!sys.ready_to_pair());
-        
+
         // TODO: Provide description
         let (mut sys, plyrs, mut rnds) = spoof_data(6);
         for id in plyrs.players.keys() {

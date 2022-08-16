@@ -59,7 +59,8 @@ impl FluidPairings {
 
     /// Calculates if a pairing is potentially possible
     pub fn ready_to_pair(&self) -> bool {
-        !self.check_ins.is_empty() && self.check_ins.len() + self.queue.len() >= self.players_per_match as usize
+        !self.check_ins.is_empty()
+            && self.check_ins.len() + self.queue.len() >= self.players_per_match as usize
     }
 
     /// Checks to see if a player can be apart of a potential pairing
