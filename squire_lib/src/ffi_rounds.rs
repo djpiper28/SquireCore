@@ -68,6 +68,34 @@ impl RoundId {
         }
     }
 
+    /// Returns the amount of time left in a round
+    /// Retrusn -1 on error
+    #[no_mangle]
+    pub extern "C" fn rid_time_left(self, tid: TournamentId) -> i64 {
+        match self.get_tourn_round(tid) {
+            Some(r) => {
+                return r.time_left().as_secs() as i64;
+            }
+            None => {
+                return -1;
+            }
+        }
+    }
+
+    /// Returns the total duration in a round
+    /// Retrusn -1 on error
+    #[no_mangle]
+    pub extern "C" fn rid_duration(self, tid: TournamentId) -> i64 {
+        match self.get_tourn_round(tid) {
+            Some(r) => {
+                return r.length.as_secs() as i64;
+            }
+            None => {
+                return -1;
+            }
+        }
+    }
+
     /// Gets the players that are in a round
     /// Returns NULL on error
     #[no_mangle]
