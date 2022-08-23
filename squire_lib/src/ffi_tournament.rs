@@ -1,6 +1,6 @@
 use crate::accounts::SquireAccount;
 use crate::ffi::{clone_string_to_c_string, FFI_TOURNAMENT_REGISTRY};
-use crate::operations::OpData::RegisterPlayer;
+use crate::operations::OpData::{Pair, RegisterPlayer};
 use crate::operations::TournOp;
 use crate::round_registry::RoundRegistry;
 use crate::tournament::pairing_system_factory;
@@ -8,7 +8,7 @@ use crate::tournament::scoring_system_factory;
 use crate::tournament::PairingSystem::{Fluid, Swiss};
 use crate::tournament::{Tournament, TournamentPreset, TournamentStatus};
 use crate::{
-    identifiers::{PlayerId, PlayerIdentifier, RoundId, TournamentId},
+    identifiers::{AdminId, PlayerId, PlayerIdentifier, RoundId, TournamentId},
     player_registry::PlayerRegistry,
 };
 use serde_json;
@@ -77,7 +77,6 @@ impl TournamentId {
             let rounds: Vec<RoundId> = tourn.round_reg.get_round_ids();
 
             let len: usize = (rounds.len() + 1) * std::mem::size_of::<RoundId>();
-
             let ptr = System
                 .allocate(Layout::from_size_align(len, 1).unwrap())
                 .unwrap()
@@ -90,6 +89,46 @@ impl TournamentId {
             }
             slice[i] = Uuid::default().into();
             return ptr;
+        }
+    }
+
+    #[no_mangle]
+    pub unsafe extern "C" fn tid_pair_round(self: Self) -> *const RoundId {
+        let admin_account: AdminId = Uuid::default().into();
+        let op: TournOp = TournOp::PairRound(admin_account);
+        match FFI_TOURNAMENT_REGISTRY.get().unwrap().get_mut(&self) {
+            Some(mut t) => {
+                match t.apply_op(op) {
+                    Ok(Pair(ident_vec)) => {
+                        let len: usize = (ident_vec.len() + 1) * std::mem::size_of::<RoundId>();
+                        let ptr = System
+                            .allocate(Layout::from_size_align(len, 1).unwrap())
+                            .unwrap()
+                            .as_mut_ptr() as *mut RoundId;
+                        let slice = &mut *(ptr::slice_from_raw_parts(ptr, len) as *mut [RoundId]);
+                        let mut i: usize = 0;
+
+                        for round_ident in ident_vec {
+                            let rid: RoundId = t.round_reg.get_round_id(&round_ident).unwrap();
+                            slice[i] = rid;
+                            i += 1;
+                        }
+                        slice[i] = Uuid::default().into();
+                        return ptr;
+                    }
+                    Err(t_err) => {
+                        println!("[FFI]: {t_err}");
+                        return std::ptr::null();
+                    }
+                    // This is never called right
+                    _ => {
+                        return std::ptr::null();
+                    }
+                }
+            }
+            None => {
+                return std::ptr::null();
+            }
         }
     }
 
