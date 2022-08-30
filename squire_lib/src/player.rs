@@ -3,7 +3,7 @@ use std::collections::HashMap;
 use serde::{Deserialize, Serialize};
 use uuid::Uuid;
 
-use mtgjson::model::deck::Deck;
+pub use mtgjson::model::deck::Deck;
 
 pub use crate::identifiers::PlayerId;
 use crate::{accounts::SquireAccount, error::TournamentError};
@@ -56,9 +56,9 @@ impl Player {
     /// Creates a new player
     pub fn from_account(account: SquireAccount) -> Self {
         Player {
-            id: account.user_id.0.into(),
-            name: account.user_name,
-            game_name: account.arena_name,
+            id: account.get_user_id().0.into(),
+            name: account.get_user_name(),
+            game_name: Some(account.get_display_name()),
             deck_ordering: Vec::new(),
             decks: HashMap::new(),
             status: PlayerStatus::Registered,

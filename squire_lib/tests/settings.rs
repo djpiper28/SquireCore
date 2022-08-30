@@ -1,5 +1,7 @@
 #[cfg(test)]
 mod tests {
+    use std::collections::HashMap;
+
     use squire_lib::{
         accounts::{SharingPermissions, SquireAccount},
         error::TournamentError,
@@ -15,11 +17,9 @@ mod tests {
         SquireAccount {
             user_name: id.to_string(),
             display_name: id.to_string(),
-            arena_name: None,
-            mtgo_name: None,
-            trice_name: None,
+            gamer_tags: HashMap::new(),
             user_id: id.into(),
-            do_share: SharingPermissions::Everything,
+            permissions: SharingPermissions::Everything,
         }
     }
 
@@ -70,21 +70,16 @@ mod tests {
             TournamentPreset::Swiss,
             "Pioneer".into(),
         );
-        assert_eq!(
-            Err(TournamentError::IncompatiblePairingSystem),
-            tourn.apply_op(UpdateTournSetting(
-                admin_id,
-                TournamentSetting::PairingSetting(PairingSetting::Fluid(
-                    FluidPairingsSetting::MatchSize(10)
-                ))
-            ))
-        );
         assert!(tourn
             .apply_op(UpdateTournSetting(
                 admin_id,
-                TournamentSetting::PairingSetting(PairingSetting::Swiss(
-                    SwissPairingsSetting::MatchSize(10)
-                ))
+                TournamentSetting::PairingSetting(PairingSetting::MatchSize(10))
+            ))
+            .is_ok());
+        assert!(tourn
+            .apply_op(UpdateTournSetting(
+                admin_id,
+                SwissPairingsSetting::DoCheckIns(true).into()
             ))
             .is_ok());
         let mut tourn = admin.create_tournament(
@@ -92,22 +87,18 @@ mod tests {
             TournamentPreset::Fluid,
             "Pioneer".into(),
         );
+        assert!(tourn
+            .apply_op(UpdateTournSetting(
+                admin_id,
+                TournamentSetting::PairingSetting(PairingSetting::MatchSize(10))
+            ))
+            .is_ok());
         assert_eq!(
             Err(TournamentError::IncompatiblePairingSystem),
             tourn.apply_op(UpdateTournSetting(
                 admin_id,
-                TournamentSetting::PairingSetting(PairingSetting::Swiss(
-                    SwissPairingsSetting::MatchSize(10)
-                ))
+                SwissPairingsSetting::DoCheckIns(true).into()
             ))
         );
-        assert!(tourn
-            .apply_op(UpdateTournSetting(
-                admin_id,
-                TournamentSetting::PairingSetting(PairingSetting::Fluid(
-                    FluidPairingsSetting::MatchSize(10)
-                ))
-            ))
-            .is_ok());
     }
 }
