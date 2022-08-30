@@ -7,10 +7,9 @@ use crate::tournament::pairing_system_factory;
 use crate::tournament::scoring_system_factory;
 use crate::tournament::PairingSystem::{Fluid, Swiss};
 use crate::tournament::{Tournament, TournamentPreset, TournamentStatus};
-use crate::{
-    identifiers::{AdminId, PlayerId, PlayerIdentifier, RoundId, TournamentId},
-    player_registry::PlayerRegistry,
-};
+use crate::identifiers::{AdminId, PlayerId, PlayerIdentifier, RoundId, TournamentId};
+use crate::player_registry::PlayerRegistry;
+use crate::settings::TournamentSetting;
 use serde_json;
 use std::alloc::{Allocator, Layout, System};
 use std::collections::HashMap;
@@ -20,6 +19,9 @@ use std::ptr;
 use std::time::Duration;
 use std::vec::Vec;
 use uuid::Uuid;
+
+/// When a tournament is saved the old file is moved to <name>.bak just 
+/// incase something very bad happens
 const BACKUP_EXT: &str = ".bak";
 
 /// TournamentIds can be used to get data safely from
@@ -203,7 +205,7 @@ impl TournamentId {
         match FFI_TOURNAMENT_REGISTRY.get().unwrap().get(&self) {
             Some(t) => return t.value().use_table_number,
             None => {
-                println!("Cannot find tournament in tourn_id.use_table_number();");
+                println!("[FFI]: Cannot find tournament in tourn_id.use_table_number();");
                 return false;
             }
         }
@@ -216,7 +218,7 @@ impl TournamentId {
         match FFI_TOURNAMENT_REGISTRY.get().unwrap().get(&self) {
             Some(t) => return t.value().game_size as i32,
             None => {
-                println!("Cannot find tournament in tourn_id.game_size();");
+                println!("[FFI]: Cannot find tournament in tourn_id.game_size();");
                 return -1;
             }
         }
@@ -229,7 +231,7 @@ impl TournamentId {
         match FFI_TOURNAMENT_REGISTRY.get().unwrap().get(&self) {
             Some(t) => return t.value().min_deck_count as i32,
             None => {
-                println!("Cannot find tournament in tourn_id.min_deck_count();");
+                println!("[FFI]: Cannot find tournament in tourn_id.min_deck_count();");
                 return -1;
             }
         }
@@ -242,7 +244,7 @@ impl TournamentId {
         match FFI_TOURNAMENT_REGISTRY.get().unwrap().get(&self) {
             Some(t) => return t.value().max_deck_count as i32,
             None => {
-                println!("Cannot find tournament in tourn_id.max_deck_count();");
+                println!("[FFI]: Cannot find tournament in tourn_id.max_deck_count();");
                 return -1;
             }
         }
@@ -258,7 +260,7 @@ impl TournamentId {
             match FFI_TOURNAMENT_REGISTRY.get().unwrap().get(&self) {
                 Some(t) => tourn = t.value().clone(),
                 None => {
-                    println!("Cannot find tournament in tourn_id.pairing_type();");
+                    println!("[FFI]: Cannot find tournament in tourn_id.pairing_type();");
                     return -1;
                 }
             }
@@ -281,7 +283,7 @@ impl TournamentId {
         match FFI_TOURNAMENT_REGISTRY.get().unwrap().get(&self) {
             Some(t) => return t.reg_open,
             None => {
-                println!("Cannot find tournament in tourn_id.reg_open();");
+                println!("[FFI]: Cannot find tournament in tourn_id.reg_open();");
                 return false;
             }
         }
@@ -294,7 +296,7 @@ impl TournamentId {
         match FFI_TOURNAMENT_REGISTRY.get().unwrap().get(&self) {
             Some(t) => return t.require_check_in,
             None => {
-                println!("Cannot find tournament in tourn_id.require_check_in();");
+                println!("[FFI]: Cannot find tournament in tourn_id.require_check_in();");
                 return false;
             }
         }
@@ -307,7 +309,7 @@ impl TournamentId {
         match FFI_TOURNAMENT_REGISTRY.get().unwrap().get(&self) {
             Some(t) => return t.require_deck_reg,
             None => {
-                println!("Cannot find tournament in tourn_id.require_deck_reg();");
+                println!("[FFI]: Cannot find tournament in tourn_id.require_deck_reg();");
                 return false;
             }
         }
@@ -320,7 +322,7 @@ impl TournamentId {
         match FFI_TOURNAMENT_REGISTRY.get().unwrap().get(&self) {
             Some(t) => return t.status,
             None => {
-                println!("Cannot find tournament in tourn_id.status();");
+                println!("[FFI]: Cannot find tournament in tourn_id.status();");
                 return TournamentStatus::Cancelled;
             }
         }
@@ -480,4 +482,70 @@ pub extern "C" fn new_tournament_from_settings(
         return Uuid::default().into();
     }
     return tournament.id;
+}
+
+/// Updates the settings
+/// Values that are not to be changed should remain the
+/// current setting, that would be the value the user
+/// selected in the GUI so that is fine.
+/// All input must be non-null.
+///
+/// If any errors occur then all actions are rolled back
+/// and, false returned.
+///
+/// Otherwise true is returned and the operations are all
+/// applied to the tournament.
+#[no_mangle]
+pub extern "C" tid_update_settings(
+    tid: TournamentId,
+    __format: *const c_char,
+    starting_table_number: u64,
+    use_table_number: bool,
+    game_size: u8,
+    min_deck_count: u8,
+    max_deck_count: u8,
+    reg_open: bool,
+    require_check_in: bool,
+    require_deck_reg: bool) -> bool {
+    let tournament: Tournament;
+    unsafe {
+        match FFI_TOURNAMENT_REGISTRY.get().unwrap().get(&self) {
+            Some(v) => tournament = v.value().clone(),
+            None => {
+                println!("[FFI]: Cannot find tournament in update_settings");
+                return false;
+            }
+        }
+    }
+
+    // Sort input strings out
+    let format: String::from(unsafe { CStr::from_ptr(__format).to_str().unwrap().to_string() });
+
+    // Init list of operations to execute
+    let mut op_vect: Vec<TournOp> = Vec::<TournOp>::new();
+    if format != tournament.format {
+        op_vect.push(TournOp::UpdateSetting(tid, TournamentSetting::Format(format)));
+    }
+
+    if starting_table_number != tournament.round_reg.starting_table {
+        op_vect.push(TournOp::UpdateSetting(tid, TournamentSetting::StartingTableNumber(starting_table_number)));
+    }
+
+    if use_table_number != tournament.use_table_number {
+        op_vect.push(TournOp::UpdateSetting(tid, TournamentSetting::UseTableNumbers(use_table_number)));
+    }
+
+    if game_size != tournament.game_size {
+        todo!("fix me");
+        //op_vect.push(TournOp::UpdateSetting(tid, TournamentSetting::PairingSetting::MatchSize(game_size)));
+    }
+
+    min_deck_count: u8,
+    max_deck_count: u8,
+    reg_open: bool,
+    require_check_in: bool,
+    require_deck_reg: bool) -> bool {
+    // Apply all settings, rollback on error.
+    
+    // Panic on double trouble
 }
